@@ -1,17 +1,5 @@
-<table>
-  <tr>
-    <th>Date</th>
-    <th>Goal</th>
-    <th>Status</th>
-  </tr>
-  <tr>
-    <td>Day 1</td>
-    <td>Set up repo and environment</td>
-    <td>✅ Done</td>
-  </tr>
-  <tr>
-    <td>Day 2–3</td>
-    <td>Train/fine-tune AI model</td>
-    <td>🔄 In progress</td>
-  </tr>
-</table>
+
+| Date      | Goal                              | hours  |
+|:---------:|:---------------------------------:|:--------:|
+| 11/4/2025 | Set up repo and made readme       | 1  |
+
