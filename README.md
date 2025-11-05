@@ -16,3 +16,14 @@ The main purpose is to combine AI creativity and capability with system level en
 
 # ERD
 <img width="414" height="704" alt="Dog2HumanERD" src="https://github.com/user-attachments/assets/5213d66a-8529-4b0e-90bb-34a10c41ff99" />
+
+# System Design
+graph TD
+    A[User Uploads Dog Image] --> B[FastAPI Server]
+    B --> C[PyTorch Model Inference]
+    C --> D[Generated Image Output]
+    D --> E[(PostgreSQL Database)]
+    B --> F[(Redis Cache)]
+    E --> G[Dashboard / Visualization]
+    F --> B
+
