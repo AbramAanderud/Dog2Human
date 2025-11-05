@@ -13,6 +13,7 @@ The main purpose is to combine AI creativity and capability with system level en
 - Data persistance and caching
 - Scalable system design
 - Integrating an ML, backend, and database
+- Project is completely finished by time of presentation
 
 # ERD
 <img width="414" height="704" alt="Dog2HumanERD" src="https://github.com/user-attachments/assets/5213d66a-8529-4b0e-90bb-34a10c41ff99" />
