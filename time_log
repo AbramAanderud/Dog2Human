@@ -1,5 +1,17 @@
-# Time log
-
-| Date | what | hours | 
-|------|------|-------|
-| 11/3/2025 | Setup repo, made readme | 1 |
+<table>
+  <tr>
+    <th>Date</th>
+    <th>Goal</th>
+    <th>Status</th>
+  </tr>
+  <tr>
+    <td>Day 1</td>
+    <td>Set up repo and environment</td>
+    <td>✅ Done</td>
+  </tr>
+  <tr>
+    <td>Day 2–3</td>
+    <td>Train/fine-tune AI model</td>
+    <td>🔄 In progress</td>
+  </tr>
+</table>
