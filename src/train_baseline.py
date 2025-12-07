@@ -5,9 +5,38 @@ import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from torchvision.utils import save_image
+
 
 from dataset import DogHumanDataset
 from models import Dog2HumanNet
+
+
+
+def save_example_images(model, dataset, device, out_path="samples_epoch.png", num_examples=4):
+    """
+    Take a few dog images from the dataset, run them through the model,
+    and save side-by-side dog vs generated human.
+    """
+    model.eval()
+    dogs = []
+    with torch.no_grad():
+        for i in range(num_examples):
+            dog_img, _ = dataset[i]   
+            dogs.append(dog_img)
+
+        dogs = torch.stack(dogs, dim=0).to(device)  
+        outputs = model(dogs)                       
+
+        dogs_unnorm = (dogs * 0.5) + 0.5
+        outs_unnorm = (outputs * 0.5) + 0.5
+
+        dogs_unnorm = dogs_unnorm.clamp(0, 1)
+        outs_unnorm = outs_unnorm.clamp(0, 1)
+
+        combined = torch.cat([dogs_unnorm, outs_unnorm], dim=3)  
+
+        save_image(combined, out_path, nrow=1)
 
 
 def main():
@@ -72,7 +101,15 @@ def main():
             ckpt_path,
         )
         print(f"Saved checkpoint to {ckpt_path}")
+        
+        sample_path = Path("samples") 
+        sample_path.mkdir(exist_ok=True)
+        out_img_path = sample_path / f"epoch_{epoch}_samples.png"
+        save_example_images(model, dataset, device, out_path=str(out_img_path))
+        print(f"Saved sample images to {out_img_path}")
 
 
 if __name__ == "__main__":
     main()
+
+
