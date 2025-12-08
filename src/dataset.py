@@ -18,8 +18,16 @@ class DogHumanDataset(Dataset):
 
     def __init__(self, root: str, image_size: int = 64, transform: Callable | None = None):
         self.root = root
-        self.dog_paths = sorted(glob(os.path.join(root, "dogs", "Images", "*", "*")))
-        self.human_paths = sorted(glob(os.path.join(root, "humans", "images_1000", "*")))
+        valid_exts = {".jpg", ".jpeg", ".png"}
+
+        self.dog_paths = sorted(
+            p for p in glob(os.path.join(root, "dogs", "**", "*"), recursive=True)
+            if os.path.isfile(p) and os.path.splitext(p)[1].lower() in valid_exts
+        )
+        self.human_paths = sorted(
+            p for p in glob(os.path.join(root, "humans", "**", "*"), recursive=True)
+            if os.path.isfile(p) and os.path.splitext(p)[1].lower() in valid_exts
+        )
 
         if not self.dog_paths:
             raise RuntimeError(f"No dog images found in {os.path.join(root, 'dogs')}")

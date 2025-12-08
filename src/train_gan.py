@@ -33,6 +33,9 @@ def main():
 
     # --- dataset & dataloader ---
     dataset = DogHumanDataset(root=data_root, image_size=image_size)
+    print(f"Found {len(dataset.dog_paths)} dog images")
+    print(f"Found {len(dataset.human_paths)} human images")
+
     dataloader = DataLoader(
         dataset,
         batch_size=batch_size,
