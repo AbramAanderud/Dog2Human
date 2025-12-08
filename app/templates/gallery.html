@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dog2Human Gallery</title>
+</head>
+<body>
+  <h1>Previous Generations</h1>
+  <p><a href="/">Back to generator</a></p>
+
+  {% for item in items %}
+    <div style="margin-bottom: 20px;">
+      <p>{{ item.created_at }}</p>
+      <div style="display: flex; gap: 10px;">
+        <div>
+          <strong>Dog</strong><br>
+          <img src="/{{ item.input_path }}" style="max-width: 128px;">
+        </div>
+        <div>
+          <strong>Human</strong><br>
+          <img src="/{{ item.output_path }}" style="max-width: 128px;">
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <p>No generations yet.</p>
+  {% endfor %}
+</body>
+</html>

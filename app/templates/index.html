@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dog2Human</title>
+</head>
+<body>
+  <h1>Dog2Human Generator</h1>
+
+  <form action="/generate" method="post" enctype="multipart/form-data">
+    <label>Upload a dog image:</label>
+    <input type="file" name="file" accept="image/*" required>
+    <button type="submit">Generate Human</button>
+  </form>
+
+  {% if generated_image_url %}
+    <h2>Result:</h2>
+    <img src="{{ generated_image_url }}" alt="Generated Human" style="max-width: 256px;">
+  {% endif %}
+
+  <p><a href="/gallery">View gallery</a></p>
+</body>
+</html>
