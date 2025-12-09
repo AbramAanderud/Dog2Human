@@ -56,12 +56,11 @@ def main():
     if use_unet:
         print("Using UNetDog2Human generator (no warm-start).")
         G = UNetDog2Human().to(device)
-        G.apply(init_weights)  # always from scratch
+        G.apply(init_weights)  
     else:
         print("Using Dog2HumanNet generator.")
         G = Dog2HumanNet().to(device)
 
-        # warm-start G from baseline if available
         baseline_ckpt = Path("checkpoints/baseline_epoch_5.pt")
         if baseline_ckpt.exists():
             print(f"Loading pretrained generator from {baseline_ckpt}")
@@ -81,7 +80,7 @@ def main():
         device=device,
         layer="relu3_3",
         weight=lambda_perc,
-    )
+    ).to(device)
 
     optimizer_G = optim.Adam(G.parameters(), lr=lr, betas=(beta1, beta2))
     optimizer_D = optim.Adam(D.parameters(), lr=lr, betas=(beta1, beta2))
@@ -125,13 +124,11 @@ def main():
             #  Train Discriminator
             optimizer_D.zero_grad()
 
-            # Real pairs (dog, real human)
             real_pair = torch.cat([dogs, humans], dim=1)
             pred_real = D(real_pair)
             target_real = torch.ones_like(pred_real, device=device)
             loss_D_real = criterion_GAN(pred_real, target_real)
 
-            # Fake pairs (dog, fake human)
             with torch.no_grad():
                 fake_humans_detached = G(dogs)
             fake_pair = torch.cat([dogs, fake_humans_detached], dim=1)
@@ -150,17 +147,14 @@ def main():
             fake_pair_for_G = torch.cat([dogs, fake_humans], dim=1)
             pred_fake_for_G = D(fake_pair_for_G)
 
-            # GAN loss: try to fool D
+            # GAN loss, try to fool D
             target_real_for_G = torch.ones_like(pred_fake_for_G, device=device)
             loss_G_GAN = criterion_GAN(pred_fake_for_G, target_real_for_G)
 
             # Pixel L1 loss
             loss_G_L1 = criterion_L1(fake_humans, humans) * lambda_L1
 
-            # Perceptual loss (VGG16 features)
             loss_G_perc = perceptual_loss(fake_humans, humans)
-
-            # Total generator loss
             loss_G = loss_G_GAN + loss_G_L1 + loss_G_perc
 
             loss_G.backward()

@@ -34,7 +34,7 @@ class PerceptualLoss(nn.Module):
         cut_idx = layer_map[layer]
         self.vgg = nn.Sequential(*list(vgg.children())[: cut_idx + 1]).to(device)
         for p in self.vgg.parameters():
-            p.requires_grad = False  # keep VGG frozen
+            p.requires_grad = False 
 
         # ImageNet normalization params
         self.register_buffer("mean", torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1))
@@ -44,10 +44,13 @@ class PerceptualLoss(nn.Module):
         """
         Convert from [-1, 1] (used in training) to ImageNet-normalized space for VGG.
         """
-        # [-1, 1] -> [0, 1]
         x = (x + 1.0) / 2.0
+        mean = self.mean.to(x.device)
+        std = self.std.to(x.device)
+
         # Normalize with ImageNet stats
-        return (x - self.mean) / self.std
+        return (x - mean) / std
+
 
     def forward(self, x_fake: torch.Tensor, x_real: torch.Tensor) -> torch.Tensor:
         # Detach real just to be safe
