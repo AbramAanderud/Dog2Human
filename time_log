@@ -11,6 +11,9 @@
 | 12/07/2025| Still trying to tweak hyperparameters to get better results | 1 |
 | 12/08/2025| Really trying to improve my training data, my human images are good but I am trying to figure out what is best for my dog domain it is what is causing the bulk of the issues here. | 3 | 
 | 12/08/2025| Unet and perceptual loss finished should get better results| 2|
-| 12/08/2025| Spent time messing with hyperparameters |0:30|
+| 12/08/2025| Spent time messing with hyperparameters |30 mins|
+| 12/08/2025| Best training run with new hyper params and unet/perceptual loss added| 3|
+
+
 
 
