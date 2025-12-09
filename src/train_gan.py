@@ -27,8 +27,8 @@ def main():
     lr = 2e-4
     beta1 = 0.5
     beta2 = 0.999
-    lambda_L1 = 50.0
-    lambda_perc = 1.0
+    lambda_L1 = 5.0
+    lambda_perc = 0.1
     num_workers = 2
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

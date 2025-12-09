@@ -44,7 +44,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 G = Dog2HumanNet().to(device)
 
 # Can be pointed to a trained GAN checkpoint
-ckpt_path = Path("checkpoints_gan/gan_epoch_19.pt")
+ckpt_path = Path("checkpoints_gan/gan_epoch_20.pt")
 if ckpt_path.exists():
     ckpt = torch.load(ckpt_path, map_location=device)
     G.load_state_dict(ckpt["G_state_dict"])
