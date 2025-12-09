@@ -17,21 +17,20 @@ def init_weights(m):
 
 
 def main():
-    # --- config ---
     data_root = "data"
     image_size = 64
     batch_size = 16
-    num_epochs = 20          # more training for GAN
+    num_epochs = 20         
     lr = 2e-4
     beta1 = 0.5
     beta2 = 0.999
-    lambda_L1 = 100.0        # Pix2Pix style weight on L1 loss
+    lambda_L1 = 50.0       
     num_workers = 2
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    # --- dataset & dataloader ---
+    # dataset and dataloader
     dataset = DogHumanDataset(root=data_root, image_size=image_size)
     print(f"Found {len(dataset.dog_paths)} dog images")
     print(f"Found {len(dataset.human_paths)} human images")
@@ -44,14 +43,25 @@ def main():
         pin_memory=torch.cuda.is_available(),
     )
 
-    # --- models ---
+    # models
     G = Dog2HumanNet().to(device)
     D = PatchDiscriminator().to(device)
 
-    G.apply(init_weights)
+    baseline_ckpt = Path("checkpoints/baseline_epoch_5.pt")
+    if baseline_ckpt.exists():
+        print(f"Loading pretrained generator from {baseline_ckpt}")
+        ckpt = torch.load(baseline_ckpt, map_location=device, weights_only=True)
+        G.load_state_dict(ckpt["model_state_dict"])
+    else:
+        print("No baseline checkpoint found, training G from scratch.")
+        G.apply(init_weights)
+
+
+    
+
     D.apply(init_weights)
 
-    # --- losses & optimizers ---
+    # losses and optimizers
     criterion_GAN = nn.BCEWithLogitsLoss()
     criterion_L1 = nn.L1Loss()
 
@@ -71,12 +81,10 @@ def main():
         G.eval()
         with torch.no_grad():
             fake = G(fixed_dogs)
-            # unnormalize
             dogs_unnorm = (fixed_dogs * 0.5) + 0.5
             fake_unnorm = (fake * 0.5) + 0.5
             dogs_unnorm = dogs_unnorm.clamp(0, 1)
             fake_unnorm = fake_unnorm.clamp(0, 1)
-            # concat along width
             combined = torch.cat([dogs_unnorm, fake_unnorm], dim=3)
             from torchvision.utils import save_image
             out_path = samples_dir / f"epoch_{epoch}_samples.png"
@@ -102,13 +110,11 @@ def main():
             # -------------------------
             optimizer_D.zero_grad()
 
-            # Real pairs (dog, human)
-            real_pair = torch.cat([dogs, humans], dim=1)  # [B,6,H,W]
+            real_pair = torch.cat([dogs, humans], dim=1)
             pred_real = D(real_pair)
             target_real = torch.ones_like(pred_real, device=device)
             loss_D_real = criterion_GAN(pred_real, target_real)
 
-            # Fake pairs (dog, G(dog)) - detach so G not updated here
             with torch.no_grad():
                 fake_humans = G(dogs)
             fake_pair = torch.cat([dogs, fake_humans], dim=1)
@@ -149,7 +155,6 @@ def main():
         avg_loss_G = running_loss_G / len(dataloader)
         print(f"Epoch {epoch}: D_loss={avg_loss_D:.4f}, G_loss={avg_loss_G:.4f}")
 
-        # Save checkpoint for generator & discriminator
         ckpt_path = ckpt_dir / f"gan_epoch_{epoch}.pt"
         torch.save({
             "epoch": epoch,

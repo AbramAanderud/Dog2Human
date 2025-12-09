@@ -13,15 +13,13 @@ from sqlalchemy.orm import Session
 
 from .database import Base, engine, SessionLocal
 from .db_models import Generation
-from src.models import Dog2HumanNet  # re-use your generator
+from src.models import Dog2HumanNet 
 
 
 app = FastAPI()
 
-# Create tables
 Base.metadata.create_all(bind=engine)
 
-# Static & templates
 BASE_DIR = Path(__file__).resolve().parent
 static_dir = BASE_DIR / "static"
 uploads_dir = static_dir / "uploads"
@@ -42,11 +40,10 @@ def get_db():
         db.close()
 
 
-# Load model (GAN-trained generator)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 G = Dog2HumanNet().to(device)
 
-# TODO: point this to your best GAN checkpoint
+# Can be pointed to a trained GAN checkpoint
 ckpt_path = Path("checkpoints_gan/gan_epoch_20.pt")
 if ckpt_path.exists():
     ckpt = torch.load(ckpt_path, map_location=device)
@@ -65,7 +62,7 @@ transform_input = transforms.Compose([
 
 
 def tensor_to_pil(tensor):
-    tensor = (tensor * 0.5) + 0.5     # [-1,1] -> [0,1]
+    tensor = (tensor * 0.5) + 0.5    
     tensor = tensor.clamp(0, 1)
     return transforms.ToPILImage()(tensor.squeeze(0).cpu())
 
@@ -79,7 +76,7 @@ async def index(request: Request):
 
 @app.post("/generate", response_class=HTMLResponse)
 async def generate(request: Request, file: UploadFile = File(...), db: Session = Depends(get_db)):
-    # Save uploaded dog image
+    # Saves dog image
     timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
     input_filename = f"dog_{timestamp}_{file.filename}"
     input_path = uploads_dir / input_filename
@@ -87,11 +84,11 @@ async def generate(request: Request, file: UploadFile = File(...), db: Session =
     with input_path.open("wb") as f:
         f.write(await file.read())
 
-    # Load & preprocess
+    # Preprocess input image
     img = Image.open(input_path).convert("RGB")
     img_t = transform_input(img).unsqueeze(0).to(device)
 
-    # Run generator
+    # Generate human image
     with torch.no_grad():
         fake = G(img_t)
 
@@ -103,7 +100,7 @@ async def generate(request: Request, file: UploadFile = File(...), db: Session =
 
     # Store in DB
     gen = Generation(
-        input_path=str(input_path.relative_to(static_dir.parent)),   # store relative
+        input_path=str(input_path.relative_to(static_dir.parent)),
         output_path=str(output_path.relative_to(static_dir.parent)),
     )
     db.add(gen)

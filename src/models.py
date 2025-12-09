@@ -4,12 +4,11 @@ import torch.nn as nn
 
 class Dog2HumanNet(nn.Module):
     """
-    Simple conv encoder-decoder:
-    input:  3 x 64 x 64 dog image (in [-1, 1])
-    output: 3 x 64 x 64 human image (in [-1, 1])
+    Simple encoder and decoder that maps a 3x64x64 dog image to a 3x64x64
+    human image. Uses Tanh on the output so it matches [-1, 1] scaling.
     """
 
-    def __init__(self, in_channels: int = 3, base_channels: int = 32):
+    def __init__(self, in_channels: int = 3, base_channels: int = 64):
         super().__init__()
 
         self.encoder = nn.Sequential(
@@ -44,22 +43,20 @@ class Dog2HumanNet(nn.Module):
         return out
 
 
-import torch.nn as nn
-import torch
 
 
 class PatchDiscriminator(nn.Module):
     """
     Pix2Pix-style PatchGAN discriminator.
-    Takes concatenated [dog, human] images as input (6 channels total).
-    Outputs a grid of real/fake scores (patches).
+    Takes concatenated [dog, human] images as input.
+    Outputs a grid of real/fake scores.
     """
 
     def __init__(self, in_channels: int = 3, base_channels: int = 64):
         super().__init__()
         c = base_channels
 
-        # Input channels: dog (3) + human (3) = 6
+        # Input channels are dog (3) + human (3) = 6
         input_channels = in_channels * 2
 
         def conv_block(in_c, out_c, normalize=True):
@@ -70,20 +67,14 @@ class PatchDiscriminator(nn.Module):
             return nn.Sequential(*layers)
 
         self.model = nn.Sequential(
-            # 64x64 -> 32x32
             conv_block(input_channels, c, normalize=False),
-            # 32x32 -> 16x16
             conv_block(c, c * 2),
-            # 16x16 -> 8x8
             conv_block(c * 2, c * 4),
-            # 8x8 -> 4x4 (no stride 2 here, smaller patches)
             nn.Conv2d(c * 4, c * 8, kernel_size=4, stride=1, padding=1),
             nn.BatchNorm2d(c * 8),
             nn.LeakyReLU(0.2, inplace=True),
-            # Final 1-channel patch output
             nn.Conv2d(c * 8, 1, kernel_size=4, stride=1, padding=1)
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # x: [B, 6, H, W]
         return self.model(x)
