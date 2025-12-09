@@ -42,8 +42,8 @@ def main():
     data_root = Path("data")
     dogs_root = data_root / "dogs"
 
-    images_root = dogs_root / "Images"      # dog photos from images.tar
-    ann_root = dogs_root / "Annotation"     # annotation files from annotation.tar
+    images_root = dogs_root / "Images"      
+    ann_root = dogs_root / "Annotation"     
 
     if not images_root.exists():
         print(f"Images folder not found at: {images_root}")
@@ -53,7 +53,6 @@ def main():
         print(f"Annotation folder not found at: {ann_root}")
         return
 
-    # Grab ALL files under Annotation/, regardless of extension
     all_ann_files = [p for p in ann_root.rglob("*") if p.is_file()]
     print(f"Found {len(all_ann_files)} files under {ann_root}")
 
@@ -75,13 +74,9 @@ def main():
 
         xmin, ymin, xmax, ymax = bbox
 
-        # Example:
-        #   ann_path = data/dogs/Annotation/n02085620-Chihuahua/n02085620_7
-        #   breed_dir = "n02085620-Chihuahua"
         breed_dir = ann_path.parent.name
-        img_stem = ann_path.stem  # e.g. "n02085620_7"
+        img_stem = ann_path.stem  
 
-        # Image is in Images/<breed_dir>/<img_stem>.<ext>
         img_path = None
         for ext in [".jpg", ".jpeg", ".JPEG", ".png"]:
             candidate = images_root / breed_dir / f"{img_stem}{ext}"
@@ -101,7 +96,6 @@ def main():
 
         w, h = img.size
 
-        # Clamp bbox to image bounds
         xmin_c = max(0, min(xmin, w - 1))
         xmax_c = max(0, min(xmax, w))
         ymin_c = max(0, min(ymin, h - 1))
@@ -111,10 +105,8 @@ def main():
             skipped += 1
             continue
 
-        # Crop to the bounding box
         cropped = img.crop((xmin_c, ymin_c, xmax_c, ymax_c))
 
-        # Make it square by padding (dog roughly centered)
         cw, ch = cropped.size
         side = max(cw, ch)
         square = Image.new("RGB", (side, side), (0, 0, 0))
@@ -122,7 +114,6 @@ def main():
         offset_y = (side - ch) // 2
         square.paste(cropped, (offset_x, offset_y))
 
-        # Resize to 128x128; dataset will later scale to 64x64 if needed
         square = square.resize((128, 128), Image.BILINEAR)
 
         out_path = out_root / f"{img_stem}.jpg"
