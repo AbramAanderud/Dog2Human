@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-2xl font-semibold mb-4">Dog2Human App</h2>
+
+<form id="upload-form" class="space-y-4" enctype="multipart/form-data">
+  <div>
+    <label class="block text-sm mb-1">Upload a dog image</label>
+    <input type="file" name="file" accept="image/*"
+           class="block w-full text-sm text-slate-300" required />
+  </div>
+  <button type="submit"
+          class="px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-400 text-sm font-semibold">
+    Generate human
+  </button>
+</form>
+
+<div id="result" class="mt-6">
+  {% if generated_image_url %}
+    <h3 class="text-lg font-semibold mb-2">Latest generation</h3>
+    <img src="{{ generated_image_url }}" alt="Generated human"
+         class="rounded-xl border border-slate-700 max-w-xs" />
+  {% endif %}
+</div>
+
+<script>
+  const form = document.getElementById('upload-form');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('You must be logged in to generate images.');
+      window.location.href = '/login';
+      return;
+    }
+
+    const formData = new FormData(form);
+
+    const resp = await fetch('/generate', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token
+      },
+      body: formData
+    });
+
+    if (resp.ok) {
+      window.location.href = '/app';
+    } else {
+      const text = await resp.text();
+      console.error(text);
+      alert('Error generating image');
+    }
+  });
+</script>
+{% endblock %}

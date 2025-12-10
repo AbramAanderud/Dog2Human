@@ -65,7 +65,7 @@ class ConvBlock(nn.Module):
 
 class UNetDog2Human(nn.Module):
     """
-    Simple U-Net style generator: 3x64x64 -> 3x64x64.
+    Simple U-Net style generator: 3x64x64 to 3x64x64.
     """
 
     def __init__(self, in_channels=3, out_channels=3, base_channels=64):

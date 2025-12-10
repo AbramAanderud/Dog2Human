@@ -13,7 +13,10 @@ from sqlalchemy.orm import Session
 
 from .database import Base, engine, SessionLocal
 from .db_models import Generation
-from src.models import Dog2HumanNet 
+from src.models import UNetDog2Human 
+from .db import engine, get_db
+from .auth import get_current_user
+from .models_db import User, DogImage, GeneratedImage
 
 
 app = FastAPI()
@@ -41,17 +44,16 @@ def get_db():
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-G = Dog2HumanNet().to(device)
+G = UNetDog2Human().to(device)
 
-# Can be pointed to a trained GAN checkpoint
 ckpt_path = Path("checkpoints_gan/gan_epoch_20.pt")
 if ckpt_path.exists():
     ckpt = torch.load(ckpt_path, map_location=device)
     G.load_state_dict(ckpt["G_state_dict"])
     G.eval()
+    print(f"Loaded GAN checkpoint from {ckpt_path}")
 else:
     print("WARNING: GAN checkpoint not found, app will not generate meaningful images.")
-
 
 transform_input = transforms.Compose([
     transforms.Resize((64, 64)),
@@ -66,60 +68,104 @@ def tensor_to_pil(tensor):
     tensor = tensor.clamp(0, 1)
     return transforms.ToPILImage()(tensor.squeeze(0).cpu())
 
-
+# routes
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
+    # Landing page
     return templates.TemplateResponse(
-        "index.html", {"request": request}
+        "index.html",
+        {"request": request},
+    )
+
+
+@app.get("/app", response_class=HTMLResponse)
+async def app_page(request: Request):
+    # Main
+    return templates.TemplateResponse(
+        "app.html",
+        {"request": request},
     )
 
 
 @app.post("/generate", response_class=HTMLResponse)
-async def generate(request: Request, file: UploadFile = File(...), db: Session = Depends(get_db)):
-    # Saves dog image
+async def generate(
+    request: Request,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user), 
+):
+    """
+    1. Save uploaded dog image to static/uploads
+    2. Run GAN to generate human image
+    3. Insert DogImage + GeneratedImage rows tied to this user
+    4. Render page with the new generated image
+    """
+    # Save dog image
     timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
     input_filename = f"dog_{timestamp}_{file.filename}"
     input_path = uploads_dir / input_filename
 
+    contents = await file.read()
     with input_path.open("wb") as f:
-        f.write(await file.read())
+        f.write(contents)
 
-    # Preprocess input image
     img = Image.open(input_path).convert("RGB")
     img_t = transform_input(img).unsqueeze(0).to(device)
 
-    # Generate human image
     with torch.no_grad():
         fake = G(img_t)
 
-    # Save output image
     output_filename = f"human_{timestamp}.png"
     output_path = generated_dir / output_filename
     out_img = tensor_to_pil(fake)
     out_img.save(output_path)
 
-    # Store in DB
-    gen = Generation(
-        input_path=str(input_path.relative_to(static_dir.parent)),
-        output_path=str(output_path.relative_to(static_dir.parent)),
+    dog_rel_path = (input_path.relative_to(static_dir)).as_posix()      # e.g. "uploads/dog_..."
+    gen_rel_path = (output_path.relative_to(static_dir)).as_posix()     # e.g. "generated/human_..."
+
+    dog_row = DogImage(
+        user_id=current_user.id,
+        file_path=dog_rel_path,
     )
-    db.add(gen)
+    db.add(dog_row)
+    db.flush()  
+
+    gen_row = GeneratedImage(
+        user_id=current_user.id,
+        dog_image_id=dog_row.id,
+        file_path=gen_rel_path,
+        model_version="gan_epoch_15",  
+    )
+    db.add(gen_row)
     db.commit()
-    db.refresh(gen)
+    db.refresh(gen_row)
 
     return templates.TemplateResponse(
-        "index.html",
+        "app.html",
         {
             "request": request,
-            "generated_image_url": f"/static/generated/{output_filename}",
+            "generated_image_url": f"/static/{gen_rel_path}",
         },
     )
 
 
 @app.get("/gallery", response_class=HTMLResponse)
-async def gallery(request: Request, db: Session = Depends(get_db)):
-    items = db.query(Generation).order_by(Generation.created_at.desc()).all()
+async def gallery(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),  
+):
+    items = (
+        db.query(GeneratedImage)
+        .filter(GeneratedImage.user_id == current_user.id)
+        .order_by(GeneratedImage.created_at.desc())
+        .all()
+    )
+
     return templates.TemplateResponse(
         "gallery.html",
-        {"request": request, "items": items},
+        {
+            "request": request,
+            "items": items,
+        },
     )

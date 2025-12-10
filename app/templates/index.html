@@ -1,22 +1,31 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Dog2Human</title>
-</head>
-<body>
-  <h1>Dog2Human Generator</h1>
-
-  <form action="/generate" method="post" enctype="multipart/form-data">
-    <label>Upload a dog image:</label>
-    <input type="file" name="file" accept="image/*" required>
-    <button type="submit">Generate Human</button>
-  </form>
-
-  {% if generated_image_url %}
-    <h2>Result:</h2>
-    <img src="{{ generated_image_url }}" alt="Generated Human" style="max-width: 256px;">
-  {% endif %}
-
-  <p><a href="/gallery">View gallery</a></p>
-</body>
-</html>
+{% extends "base.html" %}
+{% block content %}
+<div class="grid md:grid-cols-2 gap-10 items-center">
+  <div class="space-y-6">
+    <h1 class="text-4xl md:text-5xl font-bold tracking-tight">
+      Turn your <span class="text-indigo-400">dog</span> into a
+      <span class="text-pink-300">human portrait</span>.
+    </h1>
+    <p class="text-slate-300">
+      Upload a photo of your dog, and our model will generate a matching human-style face.
+      Sign in to save your generations and browse your personal gallery.
+    </p>
+    <div class="flex flex-wrap gap-4">
+      <a href="/signup"
+         class="px-5 py-2.5 rounded-full bg-indigo-500 hover:bg-indigo-400 font-semibold">
+        Get started
+      </a>
+      <a href="/app" class="px-5 py-2.5 rounded-full border border-slate-600 hover:border-indigo-400">
+        Try the app
+      </a>
+    </div>
+  </div>
+  <div class="hidden md:block">
+    <div class="aspect-square rounded-3xl border border-slate-700 overflow-hidden shadow-lg">
+      <div class="w-full h-full bg-gradient-to-br from-indigo-500/40 via-slate-900 to-pink-500/40 flex items-center justify-center">
+        <span class="text-slate-200 text-lg">Sample dog → human grid</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

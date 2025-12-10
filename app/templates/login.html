@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="flex justify-center">
+  <div class="w-full max-w-md bg-slate-900/70 border border-slate-700 rounded-2xl p-6 shadow-xl">
+    <h2 class="text-2xl font-semibold mb-4 text-center">Log in</h2>
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label class="block text-sm mb-1">Email</label>
+        <input type="email" name="email" required
+               class="w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <div>
+        <label class="block text-sm mb-1">Password</label>
+        <input type="password" name="password" required
+               class="w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <button type="submit"
+              class="w-full mt-2 rounded-lg bg-indigo-500 hover:bg-indigo-400 py-2 text-sm font-semibold">
+        Log in
+      </button>
+      <p class="text-xs text-slate-400 text-center mt-3">
+        Don’t have an account? <a href="/signup" class="text-indigo-300 hover:underline">Sign up</a>
+      </p>
+    </form>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('login-form');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+
+    const resp = await fetch('/auth/login', {
+      method: 'POST',
+      body: new URLSearchParams({
+        username: formData.get('email'),
+        password: formData.get('password'),
+      }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
+
+    const data = await resp.json();
+    if (!resp.ok) {
+      alert(data.detail || 'Login failed');
+      return;
+    }
+
+    localStorage.setItem('token', data.access_token);
+    window.location.href = '/app';
+  });
+</script>
+{% endblock %}
