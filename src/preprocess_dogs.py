@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 def parse_bbox(annotation_path: Path):
     """
-    Try to parse a Stanford Dogs annotation file and return (xmin, ymin, xmax, ymax).
+    Try to parse a Stanford Dogs annotation file and return for xmin, ymin, xmax, ymax.
     Returns None if the file isn't a valid annotation.
     """
     try:

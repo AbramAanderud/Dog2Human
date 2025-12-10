@@ -10,7 +10,7 @@ class PerceptualLoss(nn.Module):
     """
     VGG16-based perceptual loss.
 
-    Expects inputs in the SAME [-1, 1] space as your training images.
+    Expects inputs in the SAME [-1, 1] space as training images.
     Internally converts to ImageNet-normalized space before feeding VGG.
     """
 
@@ -42,7 +42,7 @@ class PerceptualLoss(nn.Module):
 
     def _to_imagenet_space(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Convert from [-1, 1] (used in training) to ImageNet-normalized space for VGG.
+        Convert from [-1, 1] to ImageNet-normalized space for VGG.
         """
         x = (x + 1.0) / 2.0
         mean = self.mean.to(x.device)

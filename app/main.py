@@ -113,8 +113,8 @@ async def generate(
     out_img = tensor_to_pil(fake)
     out_img.save(output_path)
 
-    dog_rel_path = (input_path.relative_to(static_dir)).as_posix()      # "uploads/..."
-    gen_rel_path = (output_path.relative_to(static_dir)).as_posix()     # "generated/..."
+    dog_rel_path = (input_path.relative_to(static_dir)).as_posix()     
+    gen_rel_path = (output_path.relative_to(static_dir)).as_posix()    
 
     dog_row = DogImage(
         user_id=current_user.id,

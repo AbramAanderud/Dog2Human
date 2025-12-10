@@ -65,26 +65,26 @@ class ConvBlock(nn.Module):
 
 class UNetDog2Human(nn.Module):
     """
-    Simple U-Net style generator: 3x64x64 to 3x64x64.
+    Simple U-Net style generator 3x64x64 to 3x64x64.
     """
 
     def __init__(self, in_channels=3, out_channels=3, base_channels=64):
         super().__init__()
 
-        self.enc1 = ConvBlock(in_channels, base_channels, down=True)              # 3 -> 64, 64x64 -> 32x32
-        self.enc2 = ConvBlock(base_channels, base_channels * 2, down=True)        # 64 -> 128, 32x32 -> 16x16
-        self.enc3 = ConvBlock(base_channels * 2, base_channels * 4, down=True)    # 128 -> 256, 16x16 -> 8x8
-        self.enc4 = ConvBlock(base_channels * 4, base_channels * 8, down=True)    # 256 -> 512, 8x8 -> 4x4
+        self.enc1 = ConvBlock(in_channels, base_channels, down=True)              
+        self.enc2 = ConvBlock(base_channels, base_channels * 2, down=True)        
+        self.enc3 = ConvBlock(base_channels * 2, base_channels * 4, down=True)   
+        self.enc4 = ConvBlock(base_channels * 4, base_channels * 8, down=True)   
 
         self.bottleneck = nn.Sequential(
             nn.Conv2d(base_channels * 8, base_channels * 8, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
         )
 
-        self.dec4 = ConvBlock(base_channels * 8, base_channels * 4, down=False)   # 4x4 -> 8x8
-        self.dec3 = ConvBlock(base_channels * 8, base_channels * 2, down=False)   # (256+256) -> 128, 8x8 -> 16x16
-        self.dec2 = ConvBlock(base_channels * 4, base_channels, down=False)       # (128+128) -> 64, 16x16 -> 32x32
-        self.dec1 = ConvBlock(base_channels * 2, base_channels // 2, down=False)  # (64+64) -> 32, 32x32 -> 64x64
+        self.dec4 = ConvBlock(base_channels * 8, base_channels * 4, down=False)   
+        self.dec3 = ConvBlock(base_channels * 8, base_channels * 2, down=False)  
+        self.dec2 = ConvBlock(base_channels * 4, base_channels, down=False)      
+        self.dec1 = ConvBlock(base_channels * 2, base_channels // 2, down=False)  
 
         self.final = nn.Sequential(
             nn.Conv2d(base_channels // 2, out_channels, kernel_size=3, padding=1),
@@ -119,7 +119,7 @@ class PatchDiscriminator(nn.Module):
     """
     Pix2Pix-style PatchGAN discriminator.
     Takes concatenated [dog, human] images as input.
-    Outputs a grid of real/fake scores.
+    Outputs a grid of real and fake scores.
     """
 
     def __init__(self, in_channels: int = 3, base_channels: int = 64):

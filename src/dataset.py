@@ -11,7 +11,7 @@ import torch
 class DogHumanDataset(Dataset):
     """
     Expects:
-        root/dogs_cropped/*.jpg   (pre-cropped dog faces)
+        root/dogs_cropped/*.jpg  (the pre cropped dog faces) 
         root/humans/thumbnails128x128/*.png (or .jpg)
     Pairs dog[i] with human[i].
     """
@@ -44,7 +44,7 @@ class DogHumanDataset(Dataset):
         print(f"Using {n} dog/human pairs")
 
         if transform is None:
-            #roughly square (128x128)
+            #roughly square 128x128 thumbnails
             self.transform = transforms.Compose([
                 transforms.Resize((image_size, image_size)),
                 transforms.ToTensor(),
