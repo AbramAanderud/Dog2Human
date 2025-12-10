@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from datetime import datetime
+import requests
 
 
 import torch
@@ -34,25 +35,37 @@ generated_dir.mkdir(parents=True, exist_ok=True)
 
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 G = UNetDog2Human().to(device)
 
-ckpt_path = Path("checkpoints_gan/gan_epoch_20.pt")
-if ckpt_path.exists():
+CKPT_DIR = Path("checkpoints_gan")
+CKPT_DIR.mkdir(exist_ok=True)
+
+ckpt_path = CKPT_DIR / "gan_epoch_20.pt"
+
+CKPT_URL = "https://github.com/AbramAanderud/Dog2Human/releases/download/v1-gan-checkpoint/gan_epoch_20.pt"
+
+
+if not ckpt_path.exists():
+    print("Checkpoint not found locally. Downloading...")
+    resp = requests.get(CKPT_URL, stream=True)
+    resp.raise_for_status()
+    with ckpt_path.open("wb") as f:
+        for chunk in resp.iter_content(chunk_size=8192):
+            if chunk:
+                f.write(chunk)
+    print("Checkpoint download complete.")
+
+try:
     ckpt = torch.load(ckpt_path, map_location=device)
     G.load_state_dict(ckpt["G_state_dict"])
     G.eval()
     print(f"Loaded GAN checkpoint from {ckpt_path}")
-else:
-    print("WARNING: GAN checkpoint not found, app will not generate meaningful images.")
+except Exception as e:
+    print(f"WARNING: Failed to load checkpoint: {e}")
+    print("App will run but image quality will be bad.")
 
-transform_input = transforms.Compose([
-    transforms.Resize((64, 64)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.5, 0.5, 0.5],
-                         std=[0.5, 0.5, 0.5]),
-])
+
 
 
 def tensor_to_pil(tensor):

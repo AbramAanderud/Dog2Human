@@ -13,4 +13,4 @@ passlib[bcrypt]
 python-jose[cryptography]
 SQLAlchemy
 bcrypt
-
+requests
