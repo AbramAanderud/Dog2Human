@@ -5,6 +5,7 @@ from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from datetime import datetime
 
+
 import torch
 from torchvision import transforms
 from PIL import Image
@@ -17,9 +18,11 @@ from src.models import UNetDog2Human
 from .db import engine, get_db
 from .auth import get_current_user
 from .models_db import User, DogImage, GeneratedImage
+from .auth import router as auth_router
 
 
 app = FastAPI()
+app.include_router(auth_router)
 
 Base.metadata.create_all(bind=engine)
 
@@ -169,3 +172,12 @@ async def gallery(
             "items": items,
         },
     )
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+
+@app.get("/signup", response_class=HTMLResponse)
+async def signup_page(request: Request):
+    return templates.TemplateResponse("signup.html", {"request": request})
