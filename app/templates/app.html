@@ -9,24 +9,41 @@
            class="block w-full text-sm text-slate-300" required />
   </div>
   <button type="submit"
-          class="px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-400 text-sm font-semibold">
+          class="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-sm font-semibold">
     Generate human
   </button>
 </form>
 
-<div id="result" class="mt-6">
-  {% if generated_image_url %}
-    <h3 class="text-lg font-semibold mb-2">Latest generation</h3>
-    <img src="{{ generated_image_url }}" alt="Generated human"
-         class="rounded-xl border border-slate-700 max-w-xs" />
-  {% endif %}
+<div id="result" class="mt-6 hidden">
+  <h3 class="text-lg font-semibold mb-4">Latest generation</h3>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <h4 class="text-sm font-medium mb-2 text-slate-200">Uploaded dog</h4>
+      <img id="uploaded-img"
+           class="rounded-xl border border-slate-700 w-full max-w-xs mx-auto"
+           alt="Uploaded dog" />
+    </div>
+
+    <div>
+      <h4 class="text-sm font-medium mb-2 text-slate-200">Generated human</h4>
+      <img id="generated-img"
+           class="rounded-xl border border-slate-700 w-full max-w-xs mx-auto"
+           alt="Generated human" />
+    </div>
+  </div>
 </div>
+
 
 <script>
   const form = document.getElementById('upload-form');
+  const result = document.getElementById('result');
+  const uploadedImg = document.getElementById('uploaded-img');
+  const generatedImg = document.getElementById('generated-img');
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+
     const token = localStorage.getItem('token');
     if (!token) {
       alert('You must be logged in to generate images.');
@@ -45,7 +62,11 @@
     });
 
     if (resp.ok) {
-      window.location.href = '/app';
+      const data = await resp.json();
+
+      uploadedImg.src = data.uploaded_image_url;
+      generatedImg.src = data.generated_image_url;
+      result.classList.remove('hidden');
     } else {
       const text = await resp.text();
       console.error(text);
@@ -53,4 +74,5 @@
     }
   });
 </script>
+
 {% endblock %}

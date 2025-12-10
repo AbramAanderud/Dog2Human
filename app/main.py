@@ -1,5 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, Request, Depends
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
@@ -12,13 +12,11 @@ from PIL import Image
 
 from sqlalchemy.orm import Session
 
-from .database import Base, engine, SessionLocal
-from .db_models import Generation
-from src.models import UNetDog2Human 
-from .db import engine, get_db
-from .auth import get_current_user
+from .db import Base, engine, get_db
 from .models_db import User, DogImage, GeneratedImage
+from .auth import get_current_user
 from .auth import router as auth_router
+from src.models import UNetDog2Human 
 
 
 app = FastAPI()
@@ -36,14 +34,6 @@ uploads_dir.mkdir(parents=True, exist_ok=True)
 generated_dir.mkdir(parents=True, exist_ok=True)
 
 app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -90,18 +80,18 @@ async def app_page(request: Request):
     )
 
 
-@app.post("/generate", response_class=HTMLResponse)
+@app.post("/generate")
 async def generate(
     request: Request,
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user), 
+    current_user: User = Depends(get_current_user),
 ):
     """
     1. Save uploaded dog image to static/uploads
     2. Run GAN to generate human image
     3. Insert DogImage + GeneratedImage rows tied to this user
-    4. Render page with the new generated image
+    4. Return JSON with URLs so the frontend can update the page
     """
     # Save dog image
     timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
@@ -123,8 +113,8 @@ async def generate(
     out_img = tensor_to_pil(fake)
     out_img.save(output_path)
 
-    dog_rel_path = (input_path.relative_to(static_dir)).as_posix()      # e.g. "uploads/dog_..."
-    gen_rel_path = (output_path.relative_to(static_dir)).as_posix()     # e.g. "generated/human_..."
+    dog_rel_path = (input_path.relative_to(static_dir)).as_posix()      # "uploads/..."
+    gen_rel_path = (output_path.relative_to(static_dir)).as_posix()     # "generated/..."
 
     dog_row = DogImage(
         user_id=current_user.id,
@@ -137,31 +127,28 @@ async def generate(
         user_id=current_user.id,
         dog_image_id=dog_row.id,
         file_path=gen_rel_path,
-        model_version="gan_epoch_15",  
+        model_version="gan_epoch_20",
     )
     db.add(gen_row)
     db.commit()
     db.refresh(gen_row)
 
-    return templates.TemplateResponse(
-        "app.html",
-        {
-            "request": request,
-            "generated_image_url": f"/static/{gen_rel_path}",
-        },
-    )
+    return {
+        "uploaded_image_url": f"/static/{dog_rel_path}",
+        "generated_image_url": f"/static/{gen_rel_path}",
+    }
+
 
 
 @app.get("/gallery", response_class=HTMLResponse)
 async def gallery(
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),  
 ):
     items = (
         db.query(GeneratedImage)
-        .filter(GeneratedImage.user_id == current_user.id)
         .order_by(GeneratedImage.created_at.desc())
+        .limit(50)
         .all()
     )
 
@@ -172,6 +159,7 @@ async def gallery(
             "items": items,
         },
     )
+
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):

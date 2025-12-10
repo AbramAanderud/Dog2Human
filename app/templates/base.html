@@ -6,18 +6,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="min-h-screen bg-slate-900 text-slate-100">
-  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur">
+<body class="min-h-screen bg-black text-slate-100">
+  <header class="border-b border-zinc-800 bg-black/80 backdrop-blur">
     <div class="max-w-5xl mx-auto flex items-center justify-between py-3 px-4">
+      <!-- Brand / logo -->
       <a href="/" class="flex items-center gap-2">
+        <img src="/static/logo.svg" alt="Dog2Human logo" class="w-8 h-8">
         <span class="text-xl font-bold tracking-tight">Dog2Human</span>
       </a>
-      <nav class="flex items-center gap-4 text-sm">
-        <a href="/app" class="hover:text-indigo-300">App</a>
-        <a href="/login" class="hover:text-indigo-300">Log in</a>
-        <a href="/signup" class="px-3 py-1 rounded-full bg-indigo-500 hover:bg-indigo-400 text-sm font-semibold">
-          Sign up
-        </a>
+
+      <nav class="flex items-center space-x-4 text-sm">
+        <a href="/app" id="nav-app" class="hover:text-indigo-400 hidden">App</a>
+        <a href="/gallery" id="nav-gallery" class="hover:text-indigo-400 hidden">Gallery</a>
+
+        <a href="/login" id="nav-login" class="hover:text-indigo-400">Login</a>
+        <a href="/signup" id="nav-signup" class="hover:text-indigo-400">Sign up</a>
+
+        <button id="nav-logout"
+                class="hover:text-indigo-400 hidden"
+                type="button">
+          Logout
+        </button>
       </nav>
     </div>
   </header>
@@ -25,5 +34,45 @@
   <main class="max-w-5xl mx-auto px-4 py-10">
     {% block content %}{% endblock %}
   </main>
+
+  <script>
+    function updateNavAuthState() {
+      const token = localStorage.getItem('token');
+      const loggedIn = !!token;
+
+      const loginLink   = document.getElementById('nav-login');
+      const signupLink  = document.getElementById('nav-signup');
+      const appLink     = document.getElementById('nav-app');
+      const galleryLink = document.getElementById('nav-gallery');
+      const logoutBtn   = document.getElementById('nav-logout');
+
+      if (loggedIn) {
+        if (loginLink)  loginLink.classList.add('hidden');
+        if (signupLink) signupLink.classList.add('hidden');
+        if (appLink)    appLink.classList.remove('hidden');
+        if (galleryLink) galleryLink.classList.remove('hidden');
+        if (logoutBtn)  logoutBtn.classList.remove('hidden');
+      } else {
+        if (loginLink)  loginLink.classList.remove('hidden');
+        if (signupLink) signupLink.classList.remove('hidden');
+        if (appLink)    appLink.classList.add('hidden');
+        if (galleryLink) galleryLink.classList.add('hidden');
+        if (logoutBtn)  logoutBtn.classList.add('hidden');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      updateNavAuthState();
+
+      const logoutBtn = document.getElementById('nav-logout');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+          localStorage.removeItem('token');
+          updateNavAuthState();
+          window.location.href = '/';
+        });
+      }
+    });
+  </script>
 </body>
 </html>

@@ -1,28 +1,28 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Dog2Human Gallery</title>
-</head>
-<body>
-  <h1>Previous Generations</h1>
-  <p><a href="/">Back to generator</a></p>
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-2xl font-semibold mb-4">Gallery</h2>
 
-  {% for item in items %}
-    <div style="margin-bottom: 20px;">
-      <p>{{ item.created_at }}</p>
-      <div style="display: flex; gap: 10px;">
-        <div>
-          <strong>Dog</strong><br>
-          <img src="/{{ item.input_path }}" style="max-width: 128px;">
-        </div>
-        <div>
-          <strong>Human</strong><br>
-          <img src="/{{ item.output_path }}" style="max-width: 128px;">
-        </div>
+{% if items %}
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+    {% for item in items %}
+      <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3">
+        <img src="/static/{{ item.file_path }}" 
+             alt="Generated human"
+             class="rounded-lg mb-2 w-full" />
+        {% if item.created_at %}
+          <p class="text-xs text-slate-400">
+            {{ item.created_at.strftime("%Y-%m-%d %H:%M") }}
+          </p>
+        {% endif %}
+        {% if item.model_version %}
+          <p class="text-xs text-slate-400">
+            Model: {{ item.model_version }}
+          </p>
+        {% endif %}
       </div>
-    </div>
-  {% else %}
-    <p>No generations yet.</p>
-  {% endfor %}
-</body>
-</html>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="text-slate-400">No generations yet. Go to the App and create one!</p>
+{% endif %}
+{% endblock %}
