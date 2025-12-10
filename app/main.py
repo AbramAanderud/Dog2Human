@@ -12,7 +12,7 @@ from PIL import Image
 
 from sqlalchemy.orm import Session
 
-from .db import Base, engine, get_db
+from .db import get_db
 from .models_db import User, DogImage, GeneratedImage
 from .auth import get_current_user
 from .auth import router as auth_router
@@ -22,7 +22,6 @@ from src.models import UNetDog2Human
 app = FastAPI()
 app.include_router(auth_router)
 
-Base.metadata.create_all(bind=engine)
 
 BASE_DIR = Path(__file__).resolve().parent
 static_dir = BASE_DIR / "static"
