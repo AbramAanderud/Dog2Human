@@ -28,3 +28,5 @@ graph TD
    - E --> G[Dashboard / Visualization]
    - F --> B
 
+#Schema
+![alt text](<D2H supabase schema visualizer.PNG>)
