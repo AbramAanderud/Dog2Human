@@ -65,6 +65,12 @@ except Exception as e:
     print(f"WARNING: Failed to load checkpoint: {e}")
     print("App will run but image quality will be bad.")
 
+transform_input = transforms.Compose([
+    transforms.Resize((64, 64)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.5, 0.5, 0.5],
+                         std=[0.5, 0.5, 0.5]),
+])
 
 
 
