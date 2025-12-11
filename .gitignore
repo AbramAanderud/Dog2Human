@@ -10,3 +10,5 @@ data/
 *.pth
 
 .env
+
+.dog2human_app.db

@@ -10,7 +10,10 @@ https://dog2human-mgmo.onrender.com/
 
 
 #Demo
-<video controls src="Dog2HumanDemo.mp4" title="Demo"></video>
+## Demo
+
+[Watch the demo video](Dog2HumanDemo1.mp4)
+
 
 #System Design
 
